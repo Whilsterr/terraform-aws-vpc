@@ -54,7 +54,7 @@ resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.vpc.id
 
   tags = {
-    Name = "${var.vpc_name}-gateway"
+    Name = "${var.vpc_name}-igw"
     Terraform = true
   }
 }
@@ -190,11 +190,20 @@ resource "aws_eip_association" "eip_assoc_pub" {
 
 resource "aws_route_table" "nat_route_table" {
   vpc_id = aws_vpc.vpc.id
+
+  tags = {
+    Name = "${var.vpc_name}-public"
+  }
 }
 
 resource "aws_route_table" "private_route_table" {
   for_each = var.azs
   vpc_id = aws_vpc.vpc.id
+
+  tags = {
+    Name = "${var.vpc_name}-private-${var.aws_region}${each.key}"
+  }
+
 }
 
 resource "aws_route" "nat_route" {
