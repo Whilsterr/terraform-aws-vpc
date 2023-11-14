@@ -173,12 +173,14 @@ resource "aws_instance" "natprive" {
   }
 }
 
-### EIP/Association EIP
+### EIP
 
 resource "aws_eip" "eipnatpub" {
   for_each = var.azs
   domain   = "vpc"
 }
+
+### EIP Association
 
 resource "aws_eip_association" "eip_assoc_pub" {
   for_each = var.azs
@@ -186,7 +188,7 @@ resource "aws_eip_association" "eip_assoc_pub" {
   allocation_id = aws_eip.eipnatpub[each.key].id
 }
 
-### Table de routage
+### Tables de routage
 
 resource "aws_route_table" "nat_route_table" {
   vpc_id = aws_vpc.vpc.id
@@ -206,6 +208,8 @@ resource "aws_route_table" "private_route_table" {
 
 }
 
+### Routes
+
 resource "aws_route" "nat_route" {
   route_table_id            = aws_route_table.nat_route_table.id
   destination_cidr_block    = "0.0.0.0/0"
@@ -218,6 +222,8 @@ resource "aws_route" "private_route" {
   destination_cidr_block    = "0.0.0.0/0"
   network_interface_id      = aws_instance.nat[each.key].primary_network_interface_id
 }
+
+### Tables de routage association
 
 resource "aws_route_table_association" "a" {
   for_each = var.azs
