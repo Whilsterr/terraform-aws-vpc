@@ -4,7 +4,7 @@ provider "aws" {
   region = var.aws_region
 }
 
-### Création VPC
+### Création VPC (Réseau)
 
 resource "aws_vpc" "vpc" {
   cidr_block = var.vpc_cidr_block
@@ -16,7 +16,7 @@ resource "aws_vpc" "vpc" {
   }
 }
 
-### Création Subnet
+### Création Subnet (Sous-Réseau)
 
 ### Public
 
@@ -48,7 +48,7 @@ resource "aws_subnet" "private" {
   }
 }
 
-### Internet Gateway
+### Internet Gateway (Passerelle)
 
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.vpc.id
@@ -59,7 +59,7 @@ resource "aws_internet_gateway" "gw" {
   }
 }
 
-### AMI
+### AMI (Image machine)
 
 data "aws_ami" "ami" {
   most_recent = true
@@ -74,7 +74,7 @@ data "aws_ami" "ami" {
   }
 }
 
-### Security Groups
+### Security Groups (FireWall)
 
 resource "aws_security_group" "sg" {
 
@@ -104,7 +104,9 @@ resource "aws_security_group" "private_sg" {
   }
 }
 
-### Security Groups Rules
+### Security Groups Rules (Règles Firewall)
+### Ingress = Règle entrante
+### Egress  = Règle sortante
 
 resource "aws_security_group_rule" "sgr-ingress" {
   type              = "ingress"
@@ -173,14 +175,14 @@ resource "aws_instance" "natprive" {
   }
 }
 
-### EIP
+### EIP (Demande d'adresse IP publique en amont création instance)
 
 resource "aws_eip" "eipnatpub" {
   for_each = var.azs
   domain   = "vpc"
 }
 
-### EIP Association
+### EIP Association (Associe l'EIP a l'instance)
 
 resource "aws_eip_association" "eip_assoc_pub" {
   for_each = var.azs
@@ -188,7 +190,7 @@ resource "aws_eip_association" "eip_assoc_pub" {
   allocation_id = aws_eip.eipnatpub[each.key].id
 }
 
-### Tables de routage
+### Tables de routage (Regroupement des règles de routage)
 
 resource "aws_route_table" "nat_route_table" {
   vpc_id = aws_vpc.vpc.id
@@ -208,7 +210,7 @@ resource "aws_route_table" "private_route_table" {
 
 }
 
-### Routes
+### Routes (Définition des règles de routage)
 
 resource "aws_route" "nat_route" {
   route_table_id            = aws_route_table.nat_route_table.id
@@ -223,7 +225,7 @@ resource "aws_route" "private_route" {
   network_interface_id      = aws_instance.nat[each.key].primary_network_interface_id
 }
 
-### Tables de routage association
+### Tables de routage association (Association table routage à sous-réseau)
 
 resource "aws_route_table_association" "a" {
   for_each = var.azs
